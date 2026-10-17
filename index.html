@@ -1,0 +1,229 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#f7f4ed" />
+    <meta name="description" content="一款本地保存、支持离线使用的个人记账应用。" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <meta name="apple-mobile-web-app-title" content="小账本" />
+    <link rel="manifest" href="./manifest.webmanifest" />
+    <link rel="icon" href="./icons/icon.svg" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="./icons/apple-touch-icon.png" />
+    <link rel="stylesheet" href="./styles.css" />
+    <title>小账本</title>
+  </head>
+  <body>
+    <div class="app-shell">
+      <header class="topbar">
+        <div>
+          <p class="eyebrow">只存在你的设备里</p>
+          <h1>小账本</h1>
+        </div>
+        <button class="icon-button" id="openSettings" type="button" aria-label="打开备份与设置">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 8.4a3.6 3.6 0 1 0 0 7.2 3.6 3.6 0 0 0 0-7.2Zm8.1 4.7.1-1.1-.1-1.1 2-1.6-2-3.4-2.4 1a9.4 9.4 0 0 0-1.9-1.1L15.5 3h-4l-.3 2.8c-.7.3-1.3.6-1.9 1.1l-2.4-1-2 3.4 2 1.6-.1 1.1.1 1.1-2 1.6 2 3.4 2.4-1c.6.5 1.2.8 1.9 1.1l.3 2.8h4l.3-2.8c.7-.3 1.3-.6 1.9-1.1l2.4 1 2-3.4-2-1.6Z"/></svg>
+        </button>
+      </header>
+
+      <main>
+        <section class="view is-active" id="ledgerView" data-view="ledger" aria-labelledby="ledgerTab">
+          <div class="month-row">
+            <button class="month-step" id="previousMonth" type="button" aria-label="上个月">‹</button>
+            <label class="month-picker">
+              <span class="sr-only">选择月份</span>
+              <input id="monthPicker" type="month" />
+            </label>
+            <button class="month-step" id="nextMonth" type="button" aria-label="下个月">›</button>
+          </div>
+
+          <section class="balance-card" aria-label="本月收支概览">
+            <p>本月结余</p>
+            <strong id="balanceAmount">¥0.00</strong>
+            <div class="balance-split">
+              <span><i class="dot income-dot"></i>收入 <b id="incomeAmount">¥0.00</b></span>
+              <span><i class="dot expense-dot"></i>支出 <b id="expenseAmount">¥0.00</b></span>
+            </div>
+          </section>
+
+          <div class="section-heading">
+            <div>
+              <p class="eyebrow">流水</p>
+              <h2>本月账单</h2>
+            </div>
+            <div class="filter-chips" role="group" aria-label="筛选账单类型">
+              <button class="chip is-active" type="button" data-filter="all">全部</button>
+              <button class="chip" type="button" data-filter="expense">支出</button>
+              <button class="chip" type="button" data-filter="income">收入</button>
+            </div>
+          </div>
+
+          <div id="transactionList" class="transaction-list" aria-live="polite"></div>
+        </section>
+
+        <section class="view" id="statsView" data-view="stats" aria-labelledby="statsTab">
+          <div class="page-heading">
+            <p class="eyebrow">看清钱去了哪里</p>
+            <h2>收支统计</h2>
+            <p id="statsMonthLabel" class="muted"></p>
+          </div>
+          <div class="stat-grid">
+            <article><span>收入</span><strong id="statsIncome">¥0.00</strong></article>
+            <article><span>支出</span><strong id="statsExpense">¥0.00</strong></article>
+            <article class="wide"><span>结余率</span><strong id="savingsRate">—</strong></article>
+          </div>
+          <section class="panel chart-panel">
+            <div class="chart-heading">
+              <div><p class="eyebrow">当天扇形图</p><h3>这天花在了哪里</h3></div>
+              <div class="day-controls">
+                <button id="previousDay" type="button" aria-label="前一天">‹</button>
+                <label class="day-picker"><span class="sr-only">选择统计日期</span><input id="statsDayPicker" type="date" /></label>
+                <button id="nextDay" type="button" aria-label="后一天">›</button>
+              </div>
+            </div>
+            <p id="dailySummary" class="chart-caption"></p>
+            <div class="chart-wrap">
+              <div class="donut" id="dailyExpenseDonut" role="img" aria-label="当天支出分类扇形图">
+                <div><b id="dailyDonutTotal">¥0</b><span>当天支出</span></div>
+              </div>
+              <div id="dailyCategoryLegend" class="legend"></div>
+            </div>
+          </section>
+          <section class="panel">
+            <div class="section-heading compact">
+              <div><p class="eyebrow">月度折线图</p><h3>每日支出走势</h3></div>
+            </div>
+            <div id="monthlyLineChart" class="line-chart" role="img" aria-label="月度每日支出折线图"></div>
+            <div class="line-chart-foot"><span id="monthlyAverage">日均 ¥0.00</span><span id="monthlyPeak">最高 ¥0.00</span></div>
+          </section>
+          <section class="monthly-categories">
+            <div class="section-heading">
+              <div><p class="eyebrow">下面是大类</p><h3>本月分类明细</h3></div>
+            </div>
+            <div id="monthlyCategoryList" class="category-summary-list"></div>
+          </section>
+        </section>
+
+        <section class="view" id="budgetView" data-view="budget" aria-labelledby="budgetTab">
+          <div class="page-heading action-heading">
+            <div><p class="eyebrow">给消费留出边界</p><h2>月度预算</h2><p id="budgetMonthLabel" class="muted"></p></div>
+            <button class="secondary-button" id="editBudget" type="button">设置预算</button>
+          </div>
+          <section class="budget-hero panel">
+            <div class="budget-ring" id="budgetRing"><span id="budgetPercent">0%</span></div>
+            <div>
+              <p class="muted">总预算已使用</p>
+              <strong id="budgetSpent">¥0.00</strong>
+              <p id="budgetRemaining" class="budget-remaining">尚未设置预算</p>
+            </div>
+          </section>
+          <div class="section-heading compact">
+            <div><p class="eyebrow">分类预算</p><h3>使用进度</h3></div>
+          </div>
+          <div id="categoryBudgets" class="budget-list"></div>
+        </section>
+
+        <section class="view" id="settingsView" data-view="settings" aria-labelledby="settingsTab">
+          <div class="page-heading">
+            <p class="eyebrow">数据掌握在你手里</p>
+            <h2>备份与设置</h2>
+          </div>
+          <section class="panel settings-card">
+            <div class="settings-icon warm">↓</div>
+            <div><h3>导出备份</h3><p>下载完整 JSON，可在任何设备恢复。</p></div>
+            <button class="secondary-button" id="exportJson" type="button">导出</button>
+          </section>
+          <section class="panel settings-card">
+            <div class="settings-icon cool">↗</div>
+            <div><h3>导出表格</h3><p>下载 CSV，可用 Excel 或 Numbers 打开。</p></div>
+            <button class="secondary-button" id="exportCsv" type="button">导出</button>
+          </section>
+          <section class="panel settings-card">
+            <div class="settings-icon green">↑</div>
+            <div><h3>导入备份</h3><p>支持合并现有数据，或先清空再恢复。</p></div>
+            <button class="secondary-button" id="chooseImport" type="button">导入</button>
+            <input id="importFile" type="file" accept="application/json,.json" hidden />
+          </section>
+          <section class="panel info-card">
+            <h3>关于本地数据</h3>
+            <p>账单保存在此浏览器的本地数据库中，不会主动上传。清理 Safari 网站数据、更换手机或系统异常，都可能导致数据丢失，建议定期导出 JSON 备份。</p>
+          </section>
+          <section class="panel info-card install-card" id="installCard">
+            <h3>添加到 iPhone 主屏幕</h3>
+            <ol>
+              <li>使用 Safari 打开部署后的 HTTPS 网址。</li>
+              <li>点击底部“分享”按钮。</li>
+              <li>选择“添加到主屏幕”，再点“添加”。</li>
+            </ol>
+            <button class="primary-button install-button" id="installApp" type="button" hidden>安装应用</button>
+          </section>
+          <p class="version">小账本 · 本地优先 · v1.1.0</p>
+        </section>
+      </main>
+
+      <button class="fab" id="addTransaction" type="button" aria-label="新增账单">＋</button>
+
+      <nav class="bottom-nav" aria-label="主导航">
+        <button class="nav-item is-active" id="ledgerTab" data-target="ledger" type="button"><span>⌂</span>账单</button>
+        <button class="nav-item" id="statsTab" data-target="stats" type="button"><span>◔</span>统计</button>
+        <button class="nav-item" id="budgetTab" data-target="budget" type="button"><span>◎</span>预算</button>
+        <button class="nav-item" id="settingsTab" data-target="settings" type="button"><span>⋯</span>更多</button>
+      </nav>
+    </div>
+
+    <dialog id="transactionDialog" class="sheet-dialog">
+      <form id="transactionForm" method="dialog" novalidate>
+        <div class="dialog-handle"></div>
+        <div class="dialog-title-row">
+          <div><p class="eyebrow">记录一笔</p><h2 id="transactionDialogTitle">新增账单</h2></div>
+          <button class="close-button" type="button" data-close="transactionDialog" aria-label="关闭">×</button>
+        </div>
+        <input id="transactionId" type="hidden" />
+        <div class="segmented" role="group" aria-label="账单类型">
+          <button class="is-active" type="button" data-type="expense">支出</button>
+          <button type="button" data-type="income">收入</button>
+        </div>
+        <label class="field amount-field"><span>金额</span><div><b>¥</b><input id="amountInput" type="number" min="0.01" step="0.01" inputmode="decimal" placeholder="0.00" required /></div></label>
+        <div class="field-row">
+          <label class="field"><span>日期</span><input id="dateInput" type="date" required /></label>
+          <label class="field"><span>分类</span><select id="categoryInput" required></select></label>
+        </div>
+        <label class="field"><span id="noteLabelText">钱花在哪里（选填）</span><input id="noteInput" type="text" maxlength="120" placeholder="例如：西红柿、鸡蛋、午饭" /></label>
+        <p class="form-error" id="transactionError" role="alert"></p>
+        <div class="dialog-actions">
+          <button class="danger-button" id="deleteTransaction" type="button" hidden>删除</button>
+          <button class="primary-button" type="submit">保存账单</button>
+        </div>
+      </form>
+    </dialog>
+
+    <dialog id="budgetDialog" class="sheet-dialog">
+      <form id="budgetForm" method="dialog">
+        <div class="dialog-handle"></div>
+        <div class="dialog-title-row">
+          <div><p class="eyebrow">量入为出</p><h2>设置月度预算</h2></div>
+          <button class="close-button" type="button" data-close="budgetDialog" aria-label="关闭">×</button>
+        </div>
+        <label class="field amount-field"><span>本月总预算</span><div><b>¥</b><input id="totalBudgetInput" type="number" min="0" step="1" inputmode="decimal" placeholder="0" /></div></label>
+        <p class="field-help">留空或填写 0 表示不设置总预算。</p>
+        <div class="budget-inputs" id="budgetInputs"></div>
+        <div class="dialog-actions"><button class="primary-button" type="submit">保存预算</button></div>
+      </form>
+    </dialog>
+
+    <dialog id="importDialog" class="confirm-dialog">
+      <form method="dialog">
+        <h2>如何导入？</h2>
+        <p>“合并”会保留现有账单；“覆盖”会先删除当前全部数据。</p>
+        <div class="import-options">
+          <button class="secondary-button" value="cancel">取消</button>
+          <button class="secondary-button" id="mergeImport" value="merge">合并导入</button>
+          <button class="danger-filled" id="replaceImport" value="replace">覆盖导入</button>
+        </div>
+      </form>
+    </dialog>
+
+    <div id="toast" class="toast" role="status" aria-live="polite"></div>
+    <script src="./app.js" defer></script>
+  </body>
+</html>
